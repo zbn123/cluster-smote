@@ -7,26 +7,27 @@ from imblearn.over_sampling import SMOTE
 from warnings import filterwarnings, catch_warnings, warn
 from sklearn.exceptions import DataConversionWarning
 from math import isnan
+from abc import abstractmethod
 
 
-class DBSCANSMOTE(BaseOverSampler):
+class ClusterSmote(BaseOverSampler):
     ''' Clusters the input data using DBScan and then oversamples using smote the defined clusters'''
-
     def __init__(self,
                  ratio="auto",
                  random_state=None,
-                 normalize=True,
-                 n_clusters = 8,
-                 k_neighbors = 5,
-                 n_jobs=1):
+                 normalize=True):
 
-        super(DBSCANSMOTE, self).__init__(ratio=ratio, random_state=random_state)
+        super(ClusterSmote, self).__init__(ratio=ratio, random_state=random_state)
         self._normalize = normalize
-        self.n_clusters = n_clusters
 
-        self.k_neighbors = k_neighbors
-        self.n_jobs = n_jobs
+    @abstractmethod
+    def get_labels(self):
+        """Returns the labels of the data points"""
+    pass
 
+    @abstractmethod
+    def _set_cluster(self):
+        pass
     def _fit_cluster(self, X, y=None):
         """
         Normalises the data fits a dbscan cluster object
@@ -197,10 +198,3 @@ class DBSCANSMOTE(BaseOverSampler):
                         y_resampled = np.concatenate((y_resampled, y_cluster_resampled))
 
         return X_resampled, y_resampled
-
-    def get_labels(self):
-        """Returns the labels of the data points"""
-        return self._cluster_class.labels_
-
-    def _set_cluster(self):
-        self._cluster_class = KMeans(n_clusters= self.n_clusters)
